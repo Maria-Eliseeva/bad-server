@@ -24,6 +24,7 @@ export const csrfProtection = (
         token = crypto.randomBytes(32).toString('hex')
         res.cookie(CSRF_COOKIE, token, cookieOptions)
     }
+    res.locals.csrfToken = token
 
     if (SAFE_METHODS.has(req.method)) {
         return next()

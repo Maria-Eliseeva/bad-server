@@ -165,6 +165,18 @@ const refreshAccessToken = async (
     }
 }
 
+export const getCsrfToken = (req: Request, res: Response) => {
+    const csrfToken = res.locals.csrfToken
+
+    if (!csrfToken) {
+        return res.status(500).json({
+            message: 'CSRF-токен не был создан',
+        })
+    }
+
+    return res.status(200).json({ csrfToken })
+}
+
 const getCurrentUserRoles = async (
     req: Request,
     res: Response,
