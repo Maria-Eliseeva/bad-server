@@ -9,11 +9,9 @@ export default function serveStatic(baseDir: string) {
         try {
             const requestedPath = decodeURIComponent(req.path)
             const filePath = path.resolve(safeBaseDir, `.${requestedPath}`)
+            const relative = path.relative(safeBaseDir, filePath)
 
-            if (
-                filePath !== safeBaseDir &&
-                !filePath.startsWith(safeBaseDir + path.sep)
-            ) {
+            if (relative.startsWith('..') || path.isAbsolute(relative)) {
                 return next()
             }
 
@@ -21,6 +19,11 @@ export default function serveStatic(baseDir: string) {
                 if (err) {
                     return next()
                 }
+
+                res.setHeader(
+                    'Cache-Control',
+                    'public, max-age=86400, stale-while-revalidate=3600'
+                )
 
                 return res.sendFile(filePath, (sendErr) => {
                     if (sendErr) {

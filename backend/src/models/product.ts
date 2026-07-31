@@ -1,6 +1,6 @@
 import { unlink } from 'fs'
 import mongoose, { Document } from 'mongoose'
-import { join } from 'path'
+import { relative, resolve, sep } from 'path'
 
 export interface IFile {
     fileName: string
@@ -48,24 +48,36 @@ const cardsSchema = new mongoose.Schema<IProduct>(
 
 cardsSchema.index({ title: 'text' })
 
+const getSafePublicImagePath = (fileName: string) => {
+    const publicRoot = resolve(__dirname, '../public')
+    const normalizedName = String(fileName).replace(/^[/\\]+/, '')
+    const target = resolve(publicRoot, normalizedName)
+    const rel = relative(publicRoot, target)
+
+    if (rel.startsWith('..') || rel.startsWith('/') || rel.includes(`..${sep}`)) {
+        throw new Error('Недопустимый путь изображения')
+    }
+
+    return target
+}
+
 // Можно лучше: удалять старое изображением перед обновлением сущности
 cardsSchema.pre('findOneAndUpdate', async function deleteOldImage() {
     // @ts-ignore
     const updateImage = this.getUpdate().$set?.image
     const docToUpdate = await this.model.findOne(this.getQuery())
     if (updateImage && docToUpdate) {
-        unlink(
-            join(__dirname, `../public/${docToUpdate.image.fileName}`),
-            (err) => console.log(err)
-        )
+        unlink(getSafePublicImagePath(docToUpdate.image.fileName), (err) => {
+            if (err) console.error(err)
+        })
     }
 })
 
 // Можно лучше: удалять файл с изображением после удаление сущности
 cardsSchema.post('findOneAndDelete', async (doc: IProduct) => {
-    unlink(join(__dirname, `../public/${doc.image.fileName}`), (err) =>
-        console.log(err)
-    )
+    unlink(getSafePublicImagePath(doc.image.fileName), (err) => {
+        if (err) console.error(err)
+    })
 })
 
 export default mongoose.model<IProduct>('product', cardsSchema)

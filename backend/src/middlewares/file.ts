@@ -20,7 +20,6 @@ const storage = multer.diskStorage({
         )
 
         mkdirSync(destinationPath, { recursive: true })
-
         cb(null, destinationPath)
     },
 
@@ -29,18 +28,15 @@ const storage = multer.diskStorage({
         file: Express.Multer.File,
         cb: FileNameCallback
     ) => {
-        const safeName = basename(file.originalname)
+        const safeName = basename(file.originalname).replace(
+            /[^a-zA-Z0-9._-]/g,
+            '_'
+        )
         cb(null, safeName)
     },
 })
 
-const types = [
-    'image/png',
-    'image/jpg',
-    'image/jpeg',
-    'image/gif',
-    'image/svg+xml',
-]
+const types = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
 
 const fileFilter = (
     _req: Request,
@@ -60,5 +56,7 @@ export default multer({
     limits: {
         fileSize: 5 * 1024 * 1024,
         files: 1,
+        fields: 10,
+        fieldSize: 64 * 1024,
     },
 })

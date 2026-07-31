@@ -53,11 +53,36 @@ class Api {
                   )
     }
 
+    private getCsrfToken = async () => {
+        await fetch(`${this.baseUrl}/auth/csrf`, {
+            method: 'GET',
+            credentials: 'include',
+        })
+
+        const token = getCookie('csrfToken')
+        if (!token) {
+            throw new Error('Не удалось получить CSRF-токен')
+        }
+
+        return token
+    }
+
     protected async request<T>(endpoint: string, options: RequestInit) {
         try {
+            const method = (options.method ?? 'GET').toUpperCase()
+            const headers = new Headers(
+                (options.headers as HeadersInit | undefined) ?? {}
+            )
+
+            if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+                headers.set('X-CSRF-Token', await this.getCsrfToken())
+            }
+
             const res = await fetch(`${this.baseUrl}${endpoint}`, {
                 ...this.options,
                 ...options,
+                headers,
+                credentials: 'include',
             })
             return await this.handleResponse<T>(res)
         } catch (error) {
@@ -67,8 +92,7 @@ class Api {
 
     private refreshToken = () => {
         return this.request<UserResponseToken>('/auth/token', {
-            method: 'GET',
-            credentials: 'include',
+            method: 'POST',
         })
     }
 

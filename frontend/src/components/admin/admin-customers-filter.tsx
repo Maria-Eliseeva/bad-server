@@ -20,13 +20,15 @@ export default function AdminFilterCustomers() {
     )
      
 
-    const handleFilter = (filters: Record<string, any>) => {
+    const handleFilter = (filters: Record<string, unknown>) => {
         dispatch(updateFilter({ ...filters }))
         const queryParams: { [key: string]: string } = {}
         Object.entries(filters).forEach(([key, value]) => {
             if (value) {
                 queryParams[key] =
-                    typeof value === 'object' ? value.value : value.toString()
+                    typeof value === 'object' && value !== null && 'value' in value
+                        ? String(value.value)
+                        : String(value)
             }
         })
         setSearchParams(queryParams)
