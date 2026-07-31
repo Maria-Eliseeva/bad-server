@@ -6,8 +6,8 @@ import Order, { IOrder } from '../models/order'
 import Product, { IProduct } from '../models/product'
 import User from '../models/user'
 import escapeRegExp from '../utils/escapeRegExp'
-import { sanitizeObjectId, sanitizeSearchValue, sanitizeUpdatePayload } from '../utils/sanitizeQuery'
-
+import { sanitizeLimit, sanitizeObjectId, sanitizeSearchValue, sanitizeUpdatePayload } from '../utils/sanitizeQuery'
+import { sanitizeComment } from '../utils/sanitizeQuery';
 // eslint-disable-next-line max-len
 // GET /orders?page=2&limit=5&sort=totalAmount&order=desc&orderDateFrom=2024-07-01&orderDateTo=2024-08-01&status=delivering&totalAmountFrom=100&totalAmountTo=1000&search=%2B1
 
@@ -19,7 +19,7 @@ export const getOrders = async (
     try {
         const {
             page = 1,
-            limit = 10,
+            limit: rawLimit = 10,
             sortField = 'createdAt',
             sortOrder = 'desc',
             status,
@@ -29,7 +29,7 @@ export const getOrders = async (
             orderDateTo,
             search,
         } = req.query
-
+        const limit = sanitizeLimit(rawLimit);
         const filters: FilterQuery<Partial<IOrder>> = {}
 
         const safeStatus = sanitizeSearchValue(status)
@@ -120,10 +120,20 @@ export const getOrders = async (
             filters.$or = searchConditions
         }
 
-        const sort: { [key: string]: any } = {}
+       const allowedSortFields = [
+        'createdAt',
+        'totalAmount',
+        'orderNumber',
+        'status',]
 
-        if (sortField && sortOrder) {
-            sort[sortField as string] = sortOrder === 'desc' ? -1 : 1
+        const safeSortField = allowedSortFields.includes(String(sortField))
+            ? String(sortField)
+            : 'createdAt'
+
+        const safeSortOrder = sortOrder === 'asc' ? 1 : -1
+
+        const sort = {
+            [safeSortField]: safeSortOrder,
         }
 
         aggregatePipeline.push(
@@ -331,7 +341,7 @@ export const createOrder = async (
             payment,
             phone,
             email,
-            comment,
+            comment: sanitizeComment(comment),
             customer: userId,
             deliveryAddress: address,
         })

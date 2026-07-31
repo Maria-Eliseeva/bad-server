@@ -7,12 +7,13 @@ import ConflictError from '../errors/conflict-error'
 import NotFoundError from '../errors/not-found-error'
 import Product from '../models/product'
 import movingFile from '../utils/movingFile'
-import { sanitizeObjectId, sanitizeUpdatePayload } from '../utils/sanitizeQuery'
+import { sanitizeLimit, sanitizeObjectId, sanitizeUpdatePayload } from '../utils/sanitizeQuery'
 
 // GET /product
 const getProducts = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { page = 1, limit = 5 } = req.query
+        const { page = 1, limit: rawLimit = 5 } = req.query
+        const limit = sanitizeLimit(rawLimit)
         const options = {
             skip: (Number(page) - 1) * Number(limit),
             limit: Number(limit),

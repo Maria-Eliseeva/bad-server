@@ -1,4 +1,5 @@
 import { Types } from 'mongoose'
+import sanitizeHtml from 'sanitize-html';
 
 export const toSafeString = (value: unknown): string => {
     if (value === undefined || value === null) {
@@ -7,6 +8,12 @@ export const toSafeString = (value: unknown): string => {
 
     return String(value)
 }
+
+export const sanitizeComment = (value: string) =>
+    sanitizeHtml(value, {
+        allowedTags: [],
+        allowedAttributes: {},
+    })
 
 export const sanitizeSearchValue = (
     value: unknown,
@@ -67,4 +74,14 @@ export const sanitizeUpdatePayload = (
     })
 
     return sanitized
+}
+
+export const sanitizeLimit = (value: unknown, max = 10) => {
+    const limit = Number(value)
+
+    if (!Number.isFinite(limit) || limit < 1) {
+        return 1
+    }
+
+    return Math.min(Math.floor(limit), max)
 }
