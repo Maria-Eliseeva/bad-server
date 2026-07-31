@@ -17,8 +17,14 @@ import {
 
 const authRouter = Router()
 
-authRouter.get('/csrf', (_req, res) => {
-    res.status(200).json({ success: true })
+authRouter.get('/csrf-token', (req, res) => {
+    const csrfToken = req.cookies?.csrfToken
+
+    if (!csrfToken) {
+        return res.status(500).json({ message: 'CSRF-токен не был создан' })
+    }
+
+    return res.status(200).json({ csrfToken })
 })
 
 authRouter.get('/user', auth, getCurrentUser)
