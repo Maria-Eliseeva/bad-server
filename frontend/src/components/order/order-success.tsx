@@ -1,4 +1,4 @@
-import { Link, Navigate, useLocation } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router'
 import { AppRoute } from '../../utils/constants'
 import Button from '../button/button'
 import styles from './order.module.scss'

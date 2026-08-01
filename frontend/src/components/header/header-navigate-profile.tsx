@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router'
 import { useSelector } from '../../services/hooks'
 import { basketSelector } from '../../services/slice/basket'
 import { AppRoute } from '../../utils/constants'

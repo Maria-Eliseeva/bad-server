@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { AppRoute } from '../../utils/constants'
 import styles from './header.module.scss'
 

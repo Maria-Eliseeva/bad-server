@@ -1,5 +1,5 @@
 import { useActionCreators, useDispatch, useSelector } from '@store/hooks'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router'
 import {
     customersActions,
     customersSelector,

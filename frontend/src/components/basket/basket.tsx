@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router'
 import { useActionCreators, useSelector } from '../../services/hooks'
 import { basketActions, basketSelector } from '../../services/slice/basket'
 import { orderFormActions } from '../../services/slice/orderForm'
