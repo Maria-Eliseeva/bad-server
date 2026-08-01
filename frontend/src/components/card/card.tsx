@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { ElementType } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router'
 import { useActionCreators } from '../../services/hooks'
 import { basketActions } from '../../services/slice/basket'
 import { AppRoute, CATEGORY_CLASSES } from '../../utils/constants'

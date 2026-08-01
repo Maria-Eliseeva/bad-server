@@ -2,7 +2,7 @@ import { AsyncThunk } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from '@store/hooks'
 import { RootState } from '@store/store'
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router'
 
 interface PaginationResult<_, U> {
     data: U[]

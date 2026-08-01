@@ -7,11 +7,13 @@ import ConflictError from '../errors/conflict-error'
 import NotFoundError from '../errors/not-found-error'
 import Product from '../models/product'
 import movingFile from '../utils/movingFile'
+import { sanitizeLimit, sanitizeObjectId, sanitizeUpdatePayload } from '../utils/sanitizeQuery'
 
 // GET /product
 const getProducts = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { page = 1, limit = 5 } = req.query
+        const { page = 1, limit: rawLimit = 5 } = req.query
+        const limit = sanitizeLimit(rawLimit)
         const options = {
             skip: (Number(page) - 1) * Number(limit),
             limit: Number(limit),
@@ -40,7 +42,12 @@ const createProduct = async (
     next: NextFunction
 ) => {
     try {
-        const { description, category, price, title, image } = req.body
+        const safePayload = sanitizeUpdatePayload(
+            req.body,
+            ['description', 'category', 'price', 'title', 'image'],
+            { allowObjects: ['image'] }
+        )
+        const { description, category, price, title, image } = safePayload
 
         // Переносим картинку из временной папки
         if (image) {
@@ -80,7 +87,7 @@ const updateProduct = async (
     next: NextFunction
 ) => {
     try {
-        const { productId } = req.params
+        const safeProductId = sanitizeObjectId(req.params.productId, 'productId')
         const { image } = req.body
 
         // Переносим картинку из временной папки
@@ -92,13 +99,18 @@ const updateProduct = async (
             )
         }
 
+        const safePayload = sanitizeUpdatePayload(
+            req.body,
+            ['description', 'category', 'price', 'title', 'image'],
+            { allowObjects: ['image'] }
+        )
         const product = await Product.findByIdAndUpdate(
-            productId,
+            safeProductId,
             {
                 $set: {
-                    ...req.body,
-                    price: req.body.price ? req.body.price : null,
-                    image: req.body.image ? req.body.image : undefined,
+                    ...safePayload,
+                    price: safePayload.price ? safePayload.price : null,
+                    image: safePayload.image ? safePayload.image : undefined,
                 },
             },
             { runValidators: true, new: true }
@@ -128,8 +140,8 @@ const deleteProduct = async (
     next: NextFunction
 ) => {
     try {
-        const { productId } = req.params
-        const product = await Product.findByIdAndDelete(productId).orFail(
+        const safeProductId = sanitizeObjectId(req.params.productId, 'productId')
+        const product = await Product.findByIdAndDelete(safeProductId).orFail(
             () => new NotFoundError('Нет товара по заданному id')
         )
         return res.send(product)

@@ -29,8 +29,8 @@ const Select = (props: SelectProps) => {
         extraClass,
     } = props
     const [isOpen, setIsOpen] = useState<boolean>(false)
-    const rootRef = useRef<HTMLDivElement>(null)
-    const placeholderRef = useRef<HTMLDivElement>(null)
+    const rootRef = useRef<HTMLDivElement | null>(null)
+    const placeholderRef = useRef<HTMLDivElement | null>(null)
 
     useOutsideClickClose({
         isOpen,

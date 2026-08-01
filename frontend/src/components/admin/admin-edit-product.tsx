@@ -3,7 +3,7 @@ import Form, { Input } from '@components/form'
 import useFormWithValidation from '@components/form/hooks/useFormWithValidation'
 import { SyntheticEvent, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'react-toastify'
 import { useActionCreators } from '../../services/hooks'
 import {

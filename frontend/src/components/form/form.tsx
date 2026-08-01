@@ -15,7 +15,7 @@ interface FormProps
     handleFormSubmit?: (e: SyntheticEvent<HTMLFormElement>) => void
     children: ReactNode
     extraClass?: string
-    formRef?: React.RefObject<HTMLFormElement>
+    formRef?: React.RefObject<HTMLFormElement | null>
 }
 
 export default function Form({

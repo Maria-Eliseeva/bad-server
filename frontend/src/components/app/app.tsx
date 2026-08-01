@@ -5,7 +5,7 @@ import {
     To,
     useLocation,
     useNavigate,
-} from 'react-router-dom'
+} from 'react-router'
 import '../../index.scss'
 import styles from './app.module.scss'
 

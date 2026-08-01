@@ -4,7 +4,7 @@ import { OptionType } from '../../../utils/constants'
 type UseEnterOptionSubmit = {
     onClick: (value: OptionType['value']) => void
     value: OptionType['value']
-    optionRef: React.RefObject<HTMLLIElement>
+    optionRef: React.RefObject<HTMLLIElement | null>
 }
 
 export const useEnterOptionSubmit = ({

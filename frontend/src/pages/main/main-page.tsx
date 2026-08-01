@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import Card from '../../components/card/card'
 import Gallery from '../../components/gallery/gallery'
 import { useActionCreators } from '../../services/hooks'

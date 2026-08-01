@@ -5,7 +5,9 @@ import NotFoundError from '../errors/not-found-error'
 import Order, { IOrder } from '../models/order'
 import Product, { IProduct } from '../models/product'
 import User from '../models/user'
-
+import escapeRegExp from '../utils/escapeRegExp'
+import { sanitizeLimit, sanitizeObjectId, sanitizeSearchValue, sanitizeUpdatePayload } from '../utils/sanitizeQuery'
+import { sanitizeComment } from '../utils/sanitizeQuery';
 // eslint-disable-next-line max-len
 // GET /orders?page=2&limit=5&sort=totalAmount&order=desc&orderDateFrom=2024-07-01&orderDateTo=2024-08-01&status=delivering&totalAmountFrom=100&totalAmountTo=1000&search=%2B1
 
@@ -17,7 +19,7 @@ export const getOrders = async (
     try {
         const {
             page = 1,
-            limit = 10,
+            limit: rawLimit = 10,
             sortField = 'createdAt',
             sortOrder = 'desc',
             status,
@@ -27,43 +29,60 @@ export const getOrders = async (
             orderDateTo,
             search,
         } = req.query
-
+        const limit = sanitizeLimit(rawLimit);
         const filters: FilterQuery<Partial<IOrder>> = {}
 
-        if (status) {
-            if (typeof status === 'object') {
-                Object.assign(filters, status)
-            }
-            if (typeof status === 'string') {
-                filters.status = status
-            }
+        const safeStatus = sanitizeSearchValue(status)
+
+        if (safeStatus) {
+            filters.status = safeStatus
         }
 
-        if (totalAmountFrom) {
+        const safeTotalAmountFrom = sanitizeSearchValue(totalAmountFrom)
+        if (safeTotalAmountFrom) {
+            const totalAmountFromNumber = Number(safeTotalAmountFrom)
+            if (Number.isNaN(totalAmountFromNumber)) {
+                throw new BadRequestError('Invalid totalAmountFrom')
+            }
             filters.totalAmount = {
                 ...filters.totalAmount,
-                $gte: Number(totalAmountFrom),
+                $gte: totalAmountFromNumber,
             }
         }
 
-        if (totalAmountTo) {
+        const safeTotalAmountTo = sanitizeSearchValue(totalAmountTo)
+        if (safeTotalAmountTo) {
+            const totalAmountToNumber = Number(safeTotalAmountTo)
+            if (Number.isNaN(totalAmountToNumber)) {
+                throw new BadRequestError('Invalid totalAmountTo')
+            }
             filters.totalAmount = {
                 ...filters.totalAmount,
-                $lte: Number(totalAmountTo),
+                $lte: totalAmountToNumber,
             }
         }
 
-        if (orderDateFrom) {
+        const safeOrderDateFrom = sanitizeSearchValue(orderDateFrom)
+        if (safeOrderDateFrom) {
+            const parsedDate = new Date(safeOrderDateFrom)
+            if (Number.isNaN(parsedDate.getTime())) {
+                throw new BadRequestError('Invalid orderDateFrom')
+            }
             filters.createdAt = {
                 ...filters.createdAt,
-                $gte: new Date(orderDateFrom as string),
+                $gte: parsedDate,
             }
         }
 
-        if (orderDateTo) {
+        const safeOrderDateTo = sanitizeSearchValue(orderDateTo)
+        if (safeOrderDateTo) {
+            const parsedDate = new Date(safeOrderDateTo)
+            if (Number.isNaN(parsedDate.getTime())) {
+                throw new BadRequestError('Invalid orderDateTo')
+            }
             filters.createdAt = {
                 ...filters.createdAt,
-                $lte: new Date(orderDateTo as string),
+                $lte: parsedDate,
             }
         }
 
@@ -89,9 +108,11 @@ export const getOrders = async (
             { $unwind: '$products' },
         ]
 
-        if (search) {
-            const searchRegex = new RegExp(search as string, 'i')
-            const searchNumber = Number(search)
+        const safeSearch = sanitizeSearchValue(search)
+
+        if (safeSearch) {
+            const searchRegex = new RegExp(escapeRegExp(safeSearch), 'i')
+            const searchNumber = Number(safeSearch)
 
             const searchConditions: any[] = [{ 'products.title': searchRegex }]
 
@@ -101,22 +122,47 @@ export const getOrders = async (
 
             aggregatePipeline.push({
                 $match: {
-                    $or: searchConditions,
+                    $or: [
+                        ...searchConditions,
+                        {
+                            $expr: {
+                                $regexMatch: {
+                                    input: { $toString: '$orderNumber' },
+                                    regex: escapeRegExp(safeSearch),
+                                    options: 'i',
+                                },
+                            },
+                        },
+                    ],
                 },
             })
 
             filters.$or = searchConditions
         }
 
-        const sort: { [key: string]: any } = {}
+        const safePage = sanitizeSearchValue(page)
+        const pageNumber = safePage ? Number(safePage) : 1
+        if (safePage && Number.isNaN(pageNumber)) {
+            throw new BadRequestError('Invalid page')
+        }
 
-        if (sortField && sortOrder) {
-            sort[sortField as string] = sortOrder === 'desc' ? -1 : 1
+        const safeSortField = sanitizeSearchValue(sortField)
+        const allowedSortFields = ['createdAt', 'totalAmount', 'orderNumber', 'status']
+
+        const safeSortFieldValue = allowedSortFields.includes(safeSortField)
+            ? safeSortField
+            : 'createdAt'
+
+        const safeSortOrder = sanitizeSearchValue(sortOrder)
+        const sortOrderValue = safeSortOrder === 'asc' ? 1 : -1
+
+        const sort = {
+            [safeSortFieldValue]: sortOrderValue,
         }
 
         aggregatePipeline.push(
             { $sort: sort },
-            { $skip: (Number(page) - 1) * Number(limit) },
+            { $skip: (pageNumber - 1) * Number(limit) },
             { $limit: Number(limit) },
             {
                 $group: {
@@ -183,10 +229,12 @@ export const getOrdersCurrentUser = async (
 
         let orders = user.orders as unknown as IOrder[]
 
-        if (search) {
+        const safeSearch = sanitizeSearchValue(search)
+
+        if (safeSearch) {
             // если не экранировать то получаем Invalid regular expression: /+1/i: Nothing to repeat
-            const searchRegex = new RegExp(search as string, 'i')
-            const searchNumber = Number(search)
+            const searchRegex = new RegExp(escapeRegExp(safeSearch), 'i')
+            const searchNumber = Number(safeSearch)
             const products = await Product.find({ title: searchRegex })
             const productIds = products.map((product) => product._id)
 
@@ -230,8 +278,9 @@ export const getOrderByNumber = async (
     next: NextFunction
 ) => {
     try {
+        const safeOrderNumber = sanitizeSearchValue(req.params.orderNumber)
         const order = await Order.findOne({
-            orderNumber: req.params.orderNumber,
+            orderNumber: safeOrderNumber,
         })
             .populate(['customer', 'products'])
             .orFail(
@@ -256,8 +305,9 @@ export const getOrderCurrentUserByNumber = async (
 ) => {
     const userId = res.locals.user._id
     try {
+        const safeOrderNumber = sanitizeSearchValue(req.params.orderNumber)
         const order = await Order.findOne({
-            orderNumber: req.params.orderNumber,
+            orderNumber: safeOrderNumber,
         })
             .populate(['customer', 'products'])
             .orFail(
@@ -315,7 +365,7 @@ export const createOrder = async (
             payment,
             phone,
             email,
-            comment,
+            comment: sanitizeComment(comment),
             customer: userId,
             deliveryAddress: address,
         })
@@ -338,10 +388,11 @@ export const updateOrder = async (
     next: NextFunction
 ) => {
     try {
-        const { status } = req.body
+        const safePayload = sanitizeUpdatePayload(req.body, ['status'])
+        const safeOrderNumber = sanitizeSearchValue(req.params.orderNumber)
         const updatedOrder = await Order.findOneAndUpdate(
-            { orderNumber: req.params.orderNumber },
-            { status },
+            { orderNumber: safeOrderNumber },
+            safePayload,
             { new: true, runValidators: true }
         )
             .orFail(
@@ -370,7 +421,8 @@ export const deleteOrder = async (
     next: NextFunction
 ) => {
     try {
-        const deletedOrder = await Order.findByIdAndDelete(req.params.id)
+        const safeOrderId = sanitizeObjectId(req.params.id, 'orderId')
+        const deletedOrder = await Order.findByIdAndDelete(safeOrderId)
             .orFail(
                 () =>
                     new NotFoundError(

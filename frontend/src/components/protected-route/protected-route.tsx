@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
-import type { Location } from 'react-router-dom'
+import type { Location } from 'react-router'
 
 import Spinner from '@components/spinner'
 import { userSelectors } from '@slices/user'
 import { useSelector } from '@store/hooks'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router'
 
 type TProtectedRouteProps = {
     children: ReactNode

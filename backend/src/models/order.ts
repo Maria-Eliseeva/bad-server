@@ -47,7 +47,7 @@ const orderSchema: Schema = new Schema(
             required: true,
         },
         customer: { type: Types.ObjectId, ref: 'user' },
-        deliveryAddress: { type: String },
+        deliveryAddress: { type: String, maxlength: 300 },
         email: {
             type: String,
             required: [true, 'Поле "email" должно быть заполнено'],
@@ -66,6 +66,7 @@ const orderSchema: Schema = new Schema(
         },
         comment: {
             type: String,
+            maxlength: 1000,
             default: '',
         },
     },

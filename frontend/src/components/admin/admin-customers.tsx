@@ -7,7 +7,7 @@ import { CustomersDataList } from '@slices/customers/type'
 import { useActionCreators, useDispatch, useSelector } from '@store/hooks'
 import clsx from 'clsx'
 import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react'
-import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router'
 import {
     customersActions,
     customersSelector,

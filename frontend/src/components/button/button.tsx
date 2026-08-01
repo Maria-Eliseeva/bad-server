@@ -6,7 +6,7 @@ import {
     ElementType,
     ReactNode,
 } from 'react'
-import { LinkProps } from 'react-router-dom'
+import { LinkProps } from 'react-router'
 import styles from './button.module.scss'
 
 interface ButtonProps

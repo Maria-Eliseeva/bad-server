@@ -10,7 +10,7 @@ interface FileInputProps
     label?: string
     extraClass?: string
     fileName?: string
-    inputRef: React.RefObject<HTMLInputElement>
+    inputRef: React.RefObject<HTMLInputElement | null>
 }
 
 const FileInput = ({

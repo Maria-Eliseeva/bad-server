@@ -1,6 +1,6 @@
 import InputMask from '@mona-health/react-input-mask'
 import { SyntheticEvent, useEffect, useRef } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { AppRoute } from '../../utils/constants'
 import Button from '../button/button'
 import { Input } from '../form'

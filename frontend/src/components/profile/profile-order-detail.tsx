@@ -4,11 +4,12 @@ import { OrderData } from '@slices/orders/type'
 import clsx from 'clsx'
 import { format } from 'date-fns'
 import { useEffect, useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router'
 import { useDispatch, useSelector } from '../../services/hooks'
 import { selectOrderByNumber } from '../../services/selector'
 import { getCurrentUserOrderByNumber } from '../../services/slice/profile-orders/thunk'
 import { adapterOrderFromServer } from '../../utils/adapterOrderFromServer'
+import { sanitizeComment } from '../../utils/sanitizeComment'
 import { Preloader } from '../preloader'
 import styles from './profile.module.scss'
 
@@ -69,17 +70,7 @@ export default function ProfileOrderDetail() {
                 label: 'Ваш комментарий к заказу',
                 extraClass: styles.profile__gridRowFullWidth,
                 render: (dataInfo: OrderData) => (
-                    <>
-                        {dataInfo.comment ? (
-                            <div
-                                dangerouslySetInnerHTML={{
-                                    __html: dataInfo.comment,
-                                }}
-                            />
-                        ) : (
-                            'Комментариев нет'
-                        )}
-                    </>
+                    <>{dataInfo.comment ? sanitizeComment(dataInfo.comment) : 'Комментариев нет'}</>
                 ),
             },
         ],

@@ -7,11 +7,12 @@ import { StatusType } from '@types'
 import clsx from 'clsx'
 import { format } from 'date-fns'
 import { useEffect, useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router'
 import { selectOrderByNumber } from '../../services/selector'
 import { ordersActions } from '../../services/slice/orders'
 import { getOrderByNumber } from '../../services/slice/orders/thunk'
 import { adapterOrderFromServer } from '../../utils/adapterOrderFromServer'
+import { sanitizeComment } from '../../utils/sanitizeComment'
 import { Preloader } from '../preloader'
 import styles from './admin.module.scss'
 
@@ -100,13 +101,7 @@ export default function AdminOrderDetail() {
                 label: 'Комментарий к заказу',
                 extraClass: styles.profile__gridRowFullWidth,
                 render: (dataInfo: OrderData) => (
-                    <>
-                        <div
-                            dangerouslySetInnerHTML={{
-                                __html: dataInfo.comment,
-                            }}
-                        />
-                    </>
+                    <>{dataInfo.comment ? sanitizeComment(dataInfo.comment) : 'Комментариев нет'}</>
                 ),
             },
             {
