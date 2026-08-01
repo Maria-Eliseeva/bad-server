@@ -1,5 +1,6 @@
 import { Types } from 'mongoose'
-import sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html'
+import BadRequestError from '../errors/bad-request-error'
 
 export const toSafeString = (value: unknown): string => {
     if (value === undefined || value === null) {
@@ -18,7 +19,17 @@ export const sanitizeComment = (value: string) =>
 export const sanitizeSearchValue = (
     value: unknown,
     maxLength = 100
-): string => toSafeString(value).trim().slice(0, maxLength);
+): string => {
+    if (value === undefined || value === null) {
+        return ''
+    }
+
+    if (typeof value === 'object') {
+        throw new BadRequestError('Invalid query value')
+    }
+
+    return toSafeString(value).trim().slice(0, maxLength)
+}
 
 export const sanitizeObjectId = (
     value: unknown,

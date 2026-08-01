@@ -22,14 +22,30 @@ app.set('trust proxy', 1)
 
 app.use(cookieParser())
 
-app.use(
-    cors({
-        origin: allowedOrigins,
-        credentials: true,
-        methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-    })
-)
+const corsOptions = {
+    origin: (
+        origin: string | undefined,
+        callback: (err: Error | null, allow?: boolean) => void
+    ) => {
+        if (!origin) {
+            callback(null, true)
+            return
+        }
+
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true)
+            return
+        }
+
+        callback(new Error('Not allowed by CORS'))
+    },
+    credentials: true,
+    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+}
+
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 
 app.use(
     serveStatic(path.join(__dirname, 'public'))
@@ -41,7 +57,6 @@ app.use(json({ limit: '256kb' }))
 app.use(csrfProtection)
 app.use(apiRateLimiter)
 
-app.options('*', cors({ origin: allowedOrigins, credentials: true }))
 app.use(routes)
 app.use(errors())
 app.use(errorHandler)

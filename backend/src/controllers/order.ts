@@ -38,31 +38,51 @@ export const getOrders = async (
             filters.status = safeStatus
         }
 
-        if (totalAmountFrom) {
+        const safeTotalAmountFrom = sanitizeSearchValue(totalAmountFrom)
+        if (safeTotalAmountFrom) {
+            const totalAmountFromNumber = Number(safeTotalAmountFrom)
+            if (Number.isNaN(totalAmountFromNumber)) {
+                throw new BadRequestError('Invalid totalAmountFrom')
+            }
             filters.totalAmount = {
                 ...filters.totalAmount,
-                $gte: Number(totalAmountFrom),
+                $gte: totalAmountFromNumber,
             }
         }
 
-        if (totalAmountTo) {
+        const safeTotalAmountTo = sanitizeSearchValue(totalAmountTo)
+        if (safeTotalAmountTo) {
+            const totalAmountToNumber = Number(safeTotalAmountTo)
+            if (Number.isNaN(totalAmountToNumber)) {
+                throw new BadRequestError('Invalid totalAmountTo')
+            }
             filters.totalAmount = {
                 ...filters.totalAmount,
-                $lte: Number(totalAmountTo),
+                $lte: totalAmountToNumber,
             }
         }
 
-        if (orderDateFrom) {
+        const safeOrderDateFrom = sanitizeSearchValue(orderDateFrom)
+        if (safeOrderDateFrom) {
+            const parsedDate = new Date(safeOrderDateFrom)
+            if (Number.isNaN(parsedDate.getTime())) {
+                throw new BadRequestError('Invalid orderDateFrom')
+            }
             filters.createdAt = {
                 ...filters.createdAt,
-                $gte: new Date(orderDateFrom as string),
+                $gte: parsedDate,
             }
         }
 
-        if (orderDateTo) {
+        const safeOrderDateTo = sanitizeSearchValue(orderDateTo)
+        if (safeOrderDateTo) {
+            const parsedDate = new Date(safeOrderDateTo)
+            if (Number.isNaN(parsedDate.getTime())) {
+                throw new BadRequestError('Invalid orderDateTo')
+            }
             filters.createdAt = {
                 ...filters.createdAt,
-                $lte: new Date(orderDateTo as string),
+                $lte: parsedDate,
             }
         }
 
@@ -120,25 +140,29 @@ export const getOrders = async (
             filters.$or = searchConditions
         }
 
-       const allowedSortFields = [
-        'createdAt',
-        'totalAmount',
-        'orderNumber',
-        'status',]
+        const safePage = sanitizeSearchValue(page)
+        const pageNumber = safePage ? Number(safePage) : 1
+        if (safePage && Number.isNaN(pageNumber)) {
+            throw new BadRequestError('Invalid page')
+        }
 
-        const safeSortField = allowedSortFields.includes(String(sortField))
-            ? String(sortField)
+        const safeSortField = sanitizeSearchValue(sortField)
+        const allowedSortFields = ['createdAt', 'totalAmount', 'orderNumber', 'status']
+
+        const safeSortFieldValue = allowedSortFields.includes(safeSortField)
+            ? safeSortField
             : 'createdAt'
 
-        const safeSortOrder = sortOrder === 'asc' ? 1 : -1
+        const safeSortOrder = sanitizeSearchValue(sortOrder)
+        const sortOrderValue = safeSortOrder === 'asc' ? 1 : -1
 
         const sort = {
-            [safeSortField]: safeSortOrder,
+            [safeSortFieldValue]: sortOrderValue,
         }
 
         aggregatePipeline.push(
             { $sort: sort },
-            { $skip: (Number(page) - 1) * Number(limit) },
+            { $skip: (pageNumber - 1) * Number(limit) },
             { $limit: Number(limit) },
             {
                 $group: {
