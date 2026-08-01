@@ -1,5 +1,11 @@
 import clsx from 'clsx'
-import { DetailedHTMLProps, ElementType, InputHTMLAttributes } from 'react'
+import {
+    ChangeEventHandler,
+    DetailedHTMLProps,
+    ElementType,
+    FormEventHandler,
+    InputHTMLAttributes,
+} from 'react'
 import styles from './input.module.scss'
 
 interface InputProps
@@ -7,8 +13,8 @@ interface InputProps
         InputHTMLAttributes<HTMLInputElement>,
         HTMLInputElement
     > {
-    onChange: (evt: React.ChangeEvent<HTMLInputElement>) => void
-    onInput?: (evt: React.ChangeEvent<HTMLInputElement>) => void
+    onChange: ChangeEventHandler<HTMLInputElement>
+    onInput?: FormEventHandler<HTMLInputElement>
     onBlur?: (evt: React.FocusEvent<HTMLInputElement>) => void
     value: string | number
     label?: string

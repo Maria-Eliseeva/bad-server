@@ -1,3 +1,5 @@
+import type { ReactElement } from 'react'
+
 export interface Column {
     title: string
     dataIndex: string
@@ -5,7 +7,7 @@ export interface Column {
     extraClassHeaderCell?: string
     extraClassTableCell?: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render?: (row: any) => JSX.Element
+    render?: (row: any) => ReactElement
 }
 
 export interface DataRow {

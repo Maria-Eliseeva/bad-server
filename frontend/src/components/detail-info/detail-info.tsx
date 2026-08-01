@@ -1,4 +1,5 @@
 import clsx from 'clsx'
+import type { ReactElement } from 'react'
 import React from 'react'
 import styles from './detail-info.module.scss'
 export interface DataItem {
@@ -11,7 +12,7 @@ interface Header {
     label: string
     extraClass?: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render?: (data: any) => JSX.Element
+    render?: (data: any) => ReactElement
 }
 
 interface DetailInfoProps {
